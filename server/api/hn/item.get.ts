@@ -1,13 +1,13 @@
-import { $fetch } from 'ofetch'
-import { baseURL } from '~/server/constants'
-import { Item } from '~/types'
+import { $fetch } from "ofetch";
+import { baseURL } from "~/server/constants";
+import { Item } from "~/types";
 
-export async function fetchItem (
+export async function fetchItem(
   id: string,
-  withComments = false
+  withComments = true
 ): Promise<Item> {
-  const item = await $fetch(`${baseURL}/item/${id}.json`)
-  item.kids = item.kids || {}
+  const item = await $fetch(`${baseURL}/item/${id}.json`);
+  item.kids = item.kids || {};
   return {
     id: item.id,
     user: item.by,
@@ -20,30 +20,30 @@ export async function fetchItem (
     comments_count: Object.values(item.kids).length,
     comments: withComments
       ? await Promise.all(
-        Object.values(item.kids as string[]).map(id =>
-          fetchItem(id, withComments)
+          Object.values(item.kids as string[]).map((id) =>
+            fetchItem(id, withComments)
+          )
         )
-      )
-      : []
-  }
+      : [],
+  };
 }
 
 export default defineEventHandler((event) => {
-  configureSWRHeaders(event)
-  const { id } = getQuery(event) as { id?: string }
+  configureSWRHeaders(event);
+  const { id } = getQuery(event) as { id?: string };
 
   if (!id) {
     throw createError({
       statusCode: 422,
-      statusMessage: 'Must provide a item ID.'
-    })
+      statusMessage: "Must provide a item ID.",
+    });
   }
   if (Number.isNaN(+id)) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'Item ID mush a number but got ' + id
-    })
+      statusMessage: "Item ID mush a number but got " + id,
+    });
   }
 
-  return fetchItem(id, true)
-})
+  return fetchItem(id, true);
+});
